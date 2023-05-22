@@ -20,16 +20,16 @@ module.exports = {
     },
   },
   // defaultNetwork: "hyperspace",
-  // networks: {
-  //   hyperspace: {
-  //     chainId: 3141,
-  //     url: "https://api.hyperspace.node.glif.io/rpc/v1",
-  //     accounts: [PRIVATE_KEY],
-  //   },
-  //   filecoinmainnet: {
-  //     chainId: 314,
-  //     url: "https://api.node.glif.io",
-  //     accounts: [PRIVATE_KEY],
-  //   },
-  // }
+  networks: {
+    hyperspace: {
+      chainId: 3141,
+      url: "https://api.hyperspace.node.glif.io/rpc/v1",
+      accounts: [PRIVATE_KEY],
+    },
+    filecoinmainnet: {
+      chainId: 314,
+      url: "https://api.node.glif.io",
+      accounts: [PRIVATE_KEY],
+    },
+  }
 };
