@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { ethers } from "ethers";
 
 const router = Router();
 
@@ -9,7 +10,26 @@ router.get('/', (req, res) => {
 
 // make a new collection
 
+router.post('/new', (req, res) => {
+
+    const { body } = req
+
+    const { message, signature, collectionName } = body
+
+    const ownerAddress = ethers.utils.verifyMessage(message, signature)
+
+    return res.status(200).json({ status: "ok" });
+});
+
 // get an existing collection
+
+router.get('/:collectionId', (req, res) => {
+
+
+
+    return res.status(200).json({ errors: { email: req.params.collectionId } });
+});
+
 
 // delete a collection
 

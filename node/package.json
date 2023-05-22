@@ -8,7 +8,9 @@
     "test": "mocha --timeout 60000 --reporter spec test/*.js"
   },
   "dependencies": {
+    "@faker-js/faker": "^8.0.1",
     "chai": "^4.3.7",
+    "chai-http": "^4.3.0",
     "cors": "^2.8.5",
     "cross-blob": "^3.0.2",
     "dotenv": "^16.0.3",

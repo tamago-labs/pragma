@@ -3,7 +3,6 @@ import PouchDB from 'pouchdb';
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
-import { isNumber } from '../helpers/validation.js';
 
 import 'dotenv/config'
 
@@ -67,7 +66,7 @@ class Db {
 
     }
 
-    // TOOD: updateItems
+    // TODO: updateItems
 
     getItem = async (id) => {
         return await this.db.get(id)
@@ -79,6 +78,14 @@ class Db {
             attachments: true,
             startkey,
             endkey
+        });
+        return rows.map(item => (item.doc))
+    }
+
+    getAllItems = async () => {
+        const { rows } = await this.db.allDocs({
+            include_docs: true,
+            attachments: true
         });
         return rows.map(item => (item.doc))
     }
@@ -115,9 +122,7 @@ class Db {
                 docs.push(newDoc);
             }
             await loadedVectorStore.addDocuments(docs)
-
             await loadedVectorStore.save(this.collectionName);
-
         } catch (e) {
 
             const vectorStore = await HNSWLib.fromTexts(
@@ -143,7 +148,7 @@ class Db {
     }
 
     rebuild = async () => {
-        
+
     }
 
 
