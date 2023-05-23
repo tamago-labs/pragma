@@ -54,6 +54,11 @@ app.listen(8000, () => {
     console.log(`Server Started at ${8000}`)
 })
 
+app.get('/', async (req, res) => {
+    return res.status(200).json({ status: "ok" });
+});
+
+
 app.get('/collections', async (req, res) => {
 
     const worker = new Worker()
