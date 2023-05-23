@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  pragma:
+    image: pisuthd/promptsea-pragma
+    build:
+      context: ./
+    ports:
+      - 8000:8000
+    environment:
+      OPENAI_API_KEY: YOUR_OPEN_AI_API_KEY
+      PRIVATE_KEY: YOUR_PRIVATE_KEY
+      CONTRACT_ADDRESS: "0x99ABea92A44C4B5c04247aac268Ec1f11a42f616"
+      RPC_URL: https://api.hyperspace.node.glif.io/rpc/v1
+      API_HOST: https://pragma-hackathon-api.tamago.finance
+    volumes:
+      - ./:/src
