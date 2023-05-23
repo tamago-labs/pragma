@@ -83,7 +83,7 @@ contract Pragma {
             collections[_collectionId].active == true,
             "Given ID is invalid"
         );
-        collections[collectionCount].name = _name;
+        collections[_collectionId].name = _name;
     }
 
     // update collection's url
@@ -92,7 +92,7 @@ contract Pragma {
             collections[_collectionId].active == true,
             "Given ID is invalid"
         );
-        collections[collectionCount].retrievalUrl = _retrievalUrl;
+        collections[_collectionId].retrievalUrl = _retrievalUrl;
     }
 
     // update collection's root
@@ -101,7 +101,7 @@ contract Pragma {
             collections[_collectionId].active == true,
             "Given ID is invalid"
         );
-        collections[collectionCount].root = _root;
+        collections[_collectionId].root = _root;
     }
 
     // give a specific permission to the given address
