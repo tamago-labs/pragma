@@ -2,7 +2,10 @@
 import PouchDB from 'pouchdb';
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-
+import { OpenAI } from "langchain/llms/openai";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { loadQARefineChain, loadSummarizationChain, AnalyzeDocumentChain } from "langchain/chains"
+import { ethers } from 'ethers';
 
 import 'dotenv/config'
 
@@ -55,6 +58,23 @@ class Db {
         return res
     }
 
+    addDocs = async (docs) => {
+
+        const splitter = new RecursiveCharacterTextSplitter({
+            chunkSize: 1000
+        });
+        
+        const output = await splitter.createDocuments([docs]); 
+
+        const res = await this.db.bulkDocs(output.map(((item) => ({ _id: `${ethers.utils.id(item.pageContent)}`, pageContent: item.pageContent, metadata: item.metadata }))));
+        
+        if (this.isIndexed) {
+            await this.indexItems(output.map(item => `${ethers.utils.id(item.pageContent)}`), output.map(item => item.pageContent), output.map(item => item.metadata))
+        }
+    
+        return res
+    }
+
     updateItem = async (id, rev, pageContent, metadata) => {
 
         return await this.db.put({
@@ -70,6 +90,10 @@ class Db {
 
     getItem = async (id) => {
         return await this.db.get(id)
+    }
+
+    length = async () => {
+        return (await this.db.info()).doc_count
     }
 
     getItems = async (startkey, endkey) => {
@@ -147,9 +171,55 @@ class Db {
         return await loadedVectorStore.similaritySearch(text, k);
     }
 
-    rebuild = async () => {
+    summary = async () => {
 
+        // const store = await HNSWLib.load(this.collectionName, new OpenAIEmbeddings({ openAIApiKey: process.env.OPENAI_API_KEY }));
+        const model = new OpenAI({ temperature: 0 });
+        const chain = loadSummarizationChain(model, { type: "map_reduce" });
+
+        let allDocs = await this.getAllItems()
+
+        allDocs = allDocs.map((doc) => {
+            return {
+                pageContent: doc.pageContent,
+                metadata: {
+                    id: doc["_id"]
+                }
+            }
+        })
+
+        const res = await chain.call({
+            input_documents: allDocs.splice(0, 40),
+        });
+
+        return res
     }
+
+    qa = async (input) => {
+
+        const store = await HNSWLib.load(this.collectionName, new OpenAIEmbeddings({ openAIApiKey: process.env.OPENAI_API_KEY }));
+
+        const model = new OpenAI({ temperature: 0 });
+        const chain = loadQARefineChain(model);
+
+        const question = input
+        const relevantDocs = await store.similaritySearch(question);
+
+        const res = await chain.call({
+            input_documents: relevantDocs,
+            question,
+        });
+
+        return res
+    }
+
+    store = async () => {
+        return await HNSWLib.load(this.collectionName, new OpenAIEmbeddings({ openAIApiKey: process.env.OPENAI_API_KEY }));
+    }
+
+    // rebuild = async () => {
+
+    // }
 
 
 }

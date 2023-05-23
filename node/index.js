@@ -21,6 +21,8 @@ const delay = () => {
 
 const onWorker = async (args) => {
 
+    console.log(args)
+
     const { task, payload } = args
 
     const worker = new Worker()
@@ -28,6 +30,9 @@ const onWorker = async (args) => {
     switch (task) {
         case "new_collection":
             await worker.createCollection(payload)
+            break
+        case "proof_sync":
+            await worker.syncCollection(payload)
             break
 
     }
@@ -79,7 +84,7 @@ app.post('/collection/:id', async (req, res) => {
 
     const { body, params } = req
     const { id } = params
-    const { message, signature, items } = body
+    const { message, signature, docs, items } = body
 
     const ownerAddress = ethers.utils.verifyMessage(message, signature)
 
@@ -89,6 +94,15 @@ app.post('/collection/:id', async (req, res) => {
 
     const col = collections.find(item => Number(item.id) === Number(id))
 
+    const onProofSync = () => {
+        queue.push({
+            task: "proof_sync",
+            payload: {
+                collection: col
+            }
+        })
+    }
+
     if (col) {
 
         if (col.owner.toLowerCase() !== ownerAddress.toLowerCase()) {
@@ -97,13 +111,22 @@ app.post('/collection/:id', async (req, res) => {
 
         const db = new Db(slugify(col.name), true)
 
-        await db.addItems(
-            items.map(item => item.id),
-            items.map(item => item.content),
-            []
-        )
 
-        return res.status(200).json({ status: "ok", collection: col.name, addedItems: items });
+        if (docs) {
+            await db.addDocs(docs)
+            onProofSync()
+            return res.status(200).json({ status: "ok", collection: col.name });
+        } else {
+            await db.addItems(
+                items.map(item => item.id),
+                items.map(item => item.content),
+                []
+            )
+            onProofSync()
+            return res.status(200).json({ status: "ok", collection: col.name, addedItems: items });
+        }
+
+
     } else {
         return res.status(400).json({ status: "error", error: "Given ID is invalid" });
     }
@@ -121,7 +144,7 @@ app.get('/collection/:id', async (req, res) => {
     const col = collections.find(item => Number(item.id) === Number(id))
 
     if (!col) {
-        return res.status(400).json({ status: "error", error: "Given ID is invalid"});
+        return res.status(400).json({ status: "error", error: "Given ID is invalid" });
     }
 
     const db = new Db(slugify(col.name))
@@ -130,27 +153,35 @@ app.get('/collection/:id', async (req, res) => {
     return res.status(200).json({ status: "ok", items });
 })
 
-app.get('/collection/:id/search', async (req, res) => {
+app.get('/query/:id', async (req, res) => {
 
     const { params, query } = req
     const { id } = params
-    const { q } = query
+    const { q, option } = query
 
     const worker = new Worker()
     const collections = await worker.getAllCollection()
     const col = collections.find(item => Number(item.id) === Number(id))
 
     if (!col) {
-        return res.status(400).json({ status: "error", error: "Given ID is invalid"});
+        return res.status(400).json({ status: "error", error: "Given ID is invalid" });
     }
 
-    const db = new Db(slugify(col.name))
-    const result = await db.similaritySearch(q)
+    if (!["qa", "summary", "search"].includes(option)) {
+        return res.status(400).json({ status: "error", error: "Option is invalid" });
+    }
 
-    return res.status(200).json({ status: "ok" ,result });
+    const result = await worker.query(col.name, q, option)
+
+    // const db = new Db(slugify(col.name))
+    // const result = await db.similaritySearch(q)
+
+    return res.status(200).json({ status: "ok", result });
 })
 
 const main = async () => {
+
+
 
 }
 
