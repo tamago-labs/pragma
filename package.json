@@ -1,0 +1,16 @@
+{
+  "name": "pragma",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "bootstrap": "npm install; lerna bootstrap;",
+    "package:client": "lerna run --scope client --stream dev",
+    "start": "run-p --print-label package:*",
+    "build": "lerna run --parallel build"
+  },
+  "devDependencies": {
+    "lerna": "^6.6.2"
+  }
+}
